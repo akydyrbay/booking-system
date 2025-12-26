@@ -54,8 +54,7 @@ class RoomFilter(django_filters.FilterSet):
             conflicting_bookings = Booking.objects.filter(
                 start_date__lte=end_date,
                 end_date__gte=start_date,
+                is_canceled=False,
             ).values_list("room_id", flat=True)
             queryset = queryset.exclude(id__in=conflicting_bookings)
         return queryset
-
-

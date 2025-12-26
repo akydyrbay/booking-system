@@ -1,5 +1,3 @@
-from django.shortcuts import render
-
 # Create your views here.
 
 from django.contrib.auth.models import User
@@ -46,12 +44,10 @@ class BookingViewSet(ModelViewSet):
 
         start_date = serializer.validated_data["start_date"]
         end_date = serializer.validated_data["end_date"]
-        room_obj = serializer.validated_data["room"] 
+        room_obj = serializer.validated_data["room"]
 
         conflicting_bookings = Booking.objects.filter(
-            room=room_obj, 
-            start_date__lte=end_date,
-            end_date__gte=start_date
+            room=room_obj, start_date__lte=end_date, end_date__gte=start_date
         )
 
         if conflicting_bookings.exists():
@@ -65,11 +61,11 @@ class BookingViewSet(ModelViewSet):
                 user=request.user,
                 room=room_obj,
                 start_date=start_date,
-                end_date=end_date
+                end_date=end_date,
             )
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         booking.save()
 
         return Response(
@@ -83,11 +79,14 @@ class BookingViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         try:
             booking = self.get_object()
-        except Exception: 
-            return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response(
+                {"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         if request.user == booking.user or request.user.is_superuser:
-            booking.delete()
+            booking.is_canceled = True
+            booking.save()
             return Response(
                 {"message": "Booking cancelled successfully."},
                 status=status.HTTP_200_OK,
@@ -97,6 +96,7 @@ class BookingViewSet(ModelViewSet):
                 {"error": "You do not have permission to cancel this booking."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
