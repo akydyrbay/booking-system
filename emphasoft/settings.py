@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'rest_framework.authtoken',
-    'rooms.apps.RoomsConfig',
+    'booking.apps.BookingConfig',
 ]
 
 REST_FRAMEWORK = {
