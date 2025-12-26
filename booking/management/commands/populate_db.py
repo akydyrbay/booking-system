@@ -45,10 +45,16 @@ class Command(BaseCommand):
             room = rooms[i % len(rooms)]
             end_date = start_date + datetime.timedelta(days=2)
             try:
-                Booking.objects.create(user=user, room=room, start_date=start_date, end_date=end_date)
+                Booking.objects.create(
+                    user=user, room=room, start_date=start_date, end_date=end_date
+                )
                 created += 1
             except ValidationError:
                 pass
             start_date += datetime.timedelta(days=1)
 
-        self.stdout.write(self.style.SUCCESS(f"Created {len(users)} users, {len(rooms)} rooms, {created} bookings."))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Created {len(users)} users, {len(rooms)} rooms, {created} bookings."
+            )
+        )
