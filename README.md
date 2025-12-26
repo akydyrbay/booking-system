@@ -55,30 +55,11 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-### Запуск с Docker
-
-1. **Убедитесь, что установлены Docker**
-
-2. **Запустите контейнеры:**
-```bash
-docker-compose up -d
-```
-
-3. **Выполните миграции:**
-```bash
-docker-compose exec web python manage.py migrate
-```
-
-4. **Создайте суперпользователя:**
-```bash
-docker-compose exec web python manage.py createsuperuser
-```
-
 ### Запуск локально
 
 1. **Запустите PostgreSQL:**
 - Убедитесь, что PostgreSQL запущен и доступен по адресу из `.env` файла
-- Создайте базу данных: `createdb yourdbname`
+- Создайте базу данных: `createdb yourdbname` (или используйте `psql`/GUI)
 
 2. **Выполните миграции:**
 ```bash
@@ -90,7 +71,12 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-4. **Запустите development сервер:**
+4. **(Опционально) Заполните базу тестовыми данными:**
+```bash
+python manage.py populate_db
+```
+
+5. **Запустите development сервер:**
 ```bash
 python manage.py runserver
 ```
