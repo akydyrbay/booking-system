@@ -15,7 +15,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         User = get_user_model()
 
-        # Create superuser if not exists
         if not User.objects.filter(username="admin123").exists():
             User.objects.create_superuser(
                 username="admin123", email="admin@example.com", password="adminpass"
@@ -39,7 +38,6 @@ class Command(BaseCommand):
             )
             rooms.append(room)
 
-        # Start from tomorrow to avoid validation issues with past dates
         start_date = (timezone.now() + timedelta(days=1)).date()
         created = 0
         for i in range(30):
@@ -50,7 +48,6 @@ class Command(BaseCommand):
                 Booking.objects.create(user=user, room=room, start_date=start_date, end_date=end_date)
                 created += 1
             except ValidationError:
-                # Skip invalid/conflicting bookings
                 pass
             start_date += datetime.timedelta(days=1)
 

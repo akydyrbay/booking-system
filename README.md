@@ -55,7 +55,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-### Запуск локально
+### Запуск
 
 1. **Запустите PostgreSQL:**
 - Убедитесь, что PostgreSQL запущен и доступен по адресу из `.env` файла
