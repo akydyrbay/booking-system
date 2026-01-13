@@ -13,7 +13,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from .filters import RoomFilter
+from .filters import BookingFilter, RoomFilter
 from .models import Booking, Room
 from .serializers import BookingSerializer, RegisterSerializer, RoomSerializer
 
@@ -32,6 +32,9 @@ class BookingViewSet(ModelViewSet):
     serializer_class = BookingSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = BookingFilter
+    ordering_fields = ["start_date", "end_date"]
 
     def get_queryset(self) -> QuerySet:
         if self.request.user.is_superuser:
@@ -42,30 +45,13 @@ class BookingViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        start_date = serializer.validated_data["start_date"]
-        end_date = serializer.validated_data["end_date"]
-        room_obj = serializer.validated_data["room"]
-
-        conflicting_bookings = Booking.objects.filter(
-            room=room_obj, start_date__lte=end_date, end_date__gte=start_date
+        booking = Booking(
+            user=request.user,
+            room=serializer.validated_data["room"],
+            start_date=serializer.validated_data["start_date"],
+            end_date=serializer.validated_data["end_date"],
         )
-
-        if conflicting_bookings.exists():
-            return Response(
-                {"error": "The room is not available for the selected dates."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            booking = Booking.objects.create(
-                user=request.user,
-                room=room_obj,
-                start_date=start_date,
-                end_date=end_date,
-            )
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+        booking.full_clean()
         booking.save()
 
         return Response(

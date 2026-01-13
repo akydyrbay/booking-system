@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from .models import Booking, Room
@@ -20,14 +21,35 @@ class BookingSerializer(serializers.ModelSerializer):
         room = data.get("room")
         start_date = data.get("start_date")
         end_date = data.get("end_date")
+
         if not room or not start_date or not end_date:
             raise serializers.ValidationError(
                 "Room, start date, and end date are required."
             )
         if start_date > end_date:
             raise serializers.ValidationError(
-                "The end date cannot be earlier than the start date."
+                {"end_date": "The end date cannot be earlier than the start date."}
             )
+
+        instance = Booking(
+            user=(
+                self.context.get("request").user
+                if self.context.get("request")
+                else None
+            ),
+            room=room,
+            start_date=start_date,
+            end_date=end_date,
+            is_canceled=data.get("is_canceled", False),
+        )
+
+        try:
+            instance.clean()
+        except ValidationError as e:
+            raise serializers.ValidationError(
+                e.message_dict if hasattr(e, "message_dict") else str(e)
+            )
+
         return data
 
 

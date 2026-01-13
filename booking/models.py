@@ -26,11 +26,13 @@ class Booking(models.Model):
     def __str__(self) -> str:
         return f"{self.room} - {self.user}"
 
-    def save(self, *args, **kwargs) -> None:
+    def clean(self) -> None:
         if self.start_date < timezone.now().date():
-            raise ValidationError("Start date cannot be in the past.")
+            raise ValidationError({"start_date": "Start date cannot be in the past."})
         if self.end_date < self.start_date:
-            raise ValidationError("The end date cannot be earlier than the start date.")
+            raise ValidationError(
+                {"end_date": "End date cannot be earlier than start date."}
+            )
 
         # Check for conflicts, but only with bookings that aren't canceled
         conflicting_bookings = Booking.objects.filter(
@@ -42,6 +44,5 @@ class Booking(models.Model):
 
         if conflicting_bookings.exists():
             raise ValidationError(
-                "This room is already booked for the specified period."
+                {"room": ("This room is already booked for the specified period.")}
             )
-        super().save(*args, **kwargs)

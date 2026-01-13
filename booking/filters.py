@@ -1,7 +1,4 @@
-import datetime
-
 import django_filters
-from django.db.models.query import QuerySet
 
 from .models import Booking, Room
 
@@ -23,14 +20,6 @@ class RoomFilter(django_filters.FilterSet):
         field_name="capacity",
         lookup_expr="lte",
     )
-    start_date = django_filters.DateFilter(
-        label="Start date",
-        method="filter_by_availability",
-    )
-    end_date = django_filters.DateFilter(
-        label="End date",
-        method="filter_by_availability",
-    )
 
     class Meta:
         model = Room
@@ -39,22 +28,19 @@ class RoomFilter(django_filters.FilterSet):
             "max_price",
             "min_capacity",
             "max_capacity",
-            "start_date",
-            "end_date",
         ]
 
-    def filter_by_availability(
-        self, queryset: QuerySet, name: str, value: datetime.date
-    ) -> QuerySet:
-        start_date = self.data.get("start_date")
-        end_date = self.data.get("end_date")
-        if start_date and end_date:
-            if start_date > end_date:
-                return queryset.none()
-            conflicting_bookings = Booking.objects.filter(
-                start_date__lte=end_date,
-                end_date__gte=start_date,
-                is_canceled=False,
-            ).values_list("room_id", flat=True)
-            queryset = queryset.exclude(id__in=conflicting_bookings)
-        return queryset
+
+class BookingFilter(django_filters.FilterSet):
+    start_date = django_filters.DateFromToRangeFilter(field_name="start_date")
+    end_date = django_filters.DateFromToRangeFilter(field_name="end_date")
+
+    class Meta:
+        model = Booking
+        fields = {
+            "room": ["exact"],
+            "user": ["exact"],
+            "start_date": ["gte", "lte"],
+            "end_date": ["gte", "lte"],
+            "is_canceled": ["exact"],
+        }
